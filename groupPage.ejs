@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الرهط <%= group.id %></title>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 20px;
+      position: relative; /* Set body to relative positioning */
+    }
+
+    h1 {
+      color: #333;
+      text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3);
+      margin-top: 100px;
+    }
+
+    p {
+      font-size: 20px;
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    table {
+      width: 80%;
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    img {
+      width: 100px;
+      height: 100px;
+      position: absolute; /* Set image position to absolute */
+    }
+
+    img.left {
+      left: 5px; /* Adjust the left position */
+    }
+
+    img.right {
+      right: 5px; /* Adjust the right position */
+    }
+  </style>
+</head>
+<body>
+  
+  <img src="/images/forty.jpg" alt="Left Photo" class="left">
+  <img src="/images/scout.png" alt="Right Photo" class="right">
+  <h1><strong> الرهط   <%= group.id %> : </strong>  <%= group.name %> </h1>
+  <p>Total Points: <%= totalPoints %> </p>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>ملاحظات</th>
+        <th>النقط</th>
+        <th>كابتن / شفتان</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Render group points dynamically from the database -->
+      <% points.forEach(point => { %>
+        <tr>
+          <td><%= point.notes %></td>
+          <td><%= point.points %></td>
+          <td><%= point.name %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</body>
+</html>

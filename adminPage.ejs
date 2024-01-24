@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Page</title>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3);
+      margin-top: 100px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    label {
+      margin: 10px 0;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      box-sizing: border-box;
+      text-align: center; /* Center-align text in the dropdown */
+    }
+
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .message {
+      color: #ff0000; /* Red color for the message */
+      margin: 10px 0;
+    }
+
+    img {
+      width: 100px;
+      height: 100px;
+      position: absolute;
+      /* Set image position to absolute */
+    }
+
+    img.left {
+      top: 10px;
+      left: 10px;
+      /* Adjust the top and left position */
+    }
+
+    img.right {
+      top: 10px;
+      right: 10px;
+      /* Adjust the top and right position */
+    }
+  </style>
+</head>
+<body>
+  <img src="/images/forty.jpg" alt="Left Photo" class="left">
+  <img src="/images/scout.png" alt="Right Photo" class="right">
+  <h1>ضيف درجات</h1>
+  <form action="/admin" method="post">
+    
+
+    <label for="name">قائد / شفتان</label>
+    <select name="name" required>
+      <!-- Render names dynamically from the database -->
+      <% names.forEach(name => { %>
+        <option value="<%= name.id %>"><%= name.name %></option>
+      <% }) %>
+    </select>
+
+    <label for="group">الرهط :</label>
+    <select name="group" required>
+      <!-- Render groups dynamically from the database -->
+      <% groups.forEach(group => { %>
+        <option value="<%= group.id %>"><%= group.name %></option>
+      <% }) %>
+    </select>
+
+    <label for="points">الدرجة :</label>
+    <input type="number" name="points" required>
+
+    <label for="notes">الدرجات عشان :</label>
+    <textarea name="notes" required></textarea>
+
+    <label for="password">Password:</label>
+    <input type="password" name="password" required>
+
+    <button type="submit">Save</button>
+  </form>
+</body>
+</html>
