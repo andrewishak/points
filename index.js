@@ -62,7 +62,7 @@ app.post('/admin', (req, res) => {
   const notes = req.body.notes;
 
   // Validate admin password (hardcoded for simplicity)
-  if (password === '123456') {
+  if (password === 'Scout4024') {
     console.log(selectedName);
     console.log(points);
     console.log(selectedName == 4);
