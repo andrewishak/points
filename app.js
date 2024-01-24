@@ -1,52 +1,56 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const mysql = require('mysql2');
+const { Client } = require('pg');
 const ejs = require('ejs');
 
 const app = express();
 const port = 3000;
 
-// MySQL connection
-const connection = mysql.createConnection({
-  host: '127.0.0.1',
-  user: 'root',
-  password: '123456',
-  database: 'points'
+const POSTGRES_USER="postgres.miptgpgnfbpsrunkccea"
+const POSTGRES_HOST="aws-0-ap-south-1.pooler.supabase.com"
+const POSTGRES_PASSWORD="Root@Rr147896325"
+const POSTGRES_DATABASE="postgres"
+
+// PostgreSQL connection
+const client = new Client({
+  user: POSTGRES_USER,
+  host: POSTGRES_HOST,
+  database: POSTGRES_DATABASE,
+  password: POSTGRES_PASSWORD,
+  port: 6543,
+
 });
+client.connect();
 
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(express.static(__dirname + '/public'));
-
 
 // Render pages using EJS
 app.set('view engine', 'ejs');
 
 // First Page: Admin Page
-// Update /admin route
 app.get('/admin', (req, res) => {
   // Fetch names from the 'names' table
-  const sql = 'SELECT * FROM names';
-  connection.query(sql, (err, names) => {
+  const namesSql = 'SELECT * FROM names';
+  client.query(namesSql, (err, namesResult) => {
     if (err) throw err;
 
-    // Fetch groups from the 'groups' table
-    const groupSql = 'SELECT * FROM rht';
-    connection.query(groupSql, (err, groups) => {
+    // Fetch groups from the 'rht' table
+    const groupsSql = 'SELECT * FROM rht';
+    client.query(groupsSql, (err, groupsResult) => {
       if (err) throw err;
 
       // Pass names and groups to the adminPage.ejs template
-      res.render('adminPage', { names, groups });
+      res.render('adminPage', { names: namesResult.rows, groups: groupsResult.rows });
     });
   });
 });
-app.get('/success', (req, res) => {
-  // Fetch names from the 'names' table
-  res.render('success');
 
+app.get('/success', (req, res) => {
+  res.render('success');
 });
 
-/// Handle form submission for admin page
+// Handle form submission for admin page
 app.post('/admin', (req, res) => {
   const password = req.body.password;
   const selectedName = req.body.name;
@@ -56,7 +60,6 @@ app.post('/admin', (req, res) => {
 
   // Validate admin password (hardcoded for simplicity)
   if (password === '123456') {
-
     console.log(selectedName);
     console.log(points);
     console.log(selectedName == 4);
@@ -65,29 +68,29 @@ app.post('/admin', (req, res) => {
       res.render('bisho');
     } else {
       // Insert data into group_points table
-      const sql = `INSERT INTO group_points (group_id, points, name_id, notes) VALUES (?, ?, ?, ?)`;
-      connection.query(sql, [selectedGroup, points, selectedName, notes], (err, results) => {
+      const sql = `INSERT INTO group_points (group_id, points, name_id, notes) VALUES ($1, $2, $3, $4)`;
+      client.query(sql, [selectedGroup, points, selectedName, notes], (err, results) => {
         if (err) throw err;
         res.redirect('/success'); // Redirect to success page
       });
     }
-
   } else {
     res.send('<script>alert("Invalid password"); window.history.back();</script>'); // Display alert and go back
   }
 });
-
 
 // Update /group route
 app.get('/group/:groupId', (req, res) => {
   const groupId = req.params.groupId;
 
   // Fetch group information
-  const groupSql = 'SELECT * FROM rht WHERE id = ?';
-  connection.query(groupSql, [groupId], (err, group) => {
+  const groupSql = 'SELECT * FROM rht WHERE id = $1';
+  client.query(groupSql, [groupId], (err, groupResult) => {
     if (err) throw err;
 
-    if (!group || group.length === 0) {
+    const group = groupResult.rows[0];
+
+    if (!group) {
       // Handle case where group is not found
       res.send('Group not found');
       return;
@@ -97,19 +100,20 @@ app.get('/group/:groupId', (req, res) => {
     const pointsSql = `SELECT names.name, group_points.points, group_points.notes
                        FROM names
                        INNER JOIN group_points ON names.id = group_points.name_id
-                       WHERE group_points.group_id = ?`;
-    connection.query(pointsSql, [groupId], (err, points) => {
+                       WHERE group_points.group_id = $1`;
+    client.query(pointsSql, [groupId], (err, pointsResult) => {
       if (err) throw err;
+
+      const points = pointsResult.rows;
 
       // Calculate total group points
       const totalPoints = points.reduce((acc, row) => acc + row.points, 0);
 
       // Render the groupPage.ejs template with group information and points
-      res.render('groupPage', { group: group[0], points, totalPoints });
+      res.render('groupPage', { group, points, totalPoints });
     });
   });
 });
-
 
 app.get('/groups', (req, res) => {
   const sql = `SELECT rht.id AS group_id, rht.name AS group_name, 
@@ -120,8 +124,10 @@ app.get('/groups', (req, res) => {
               GROUP BY rht.id, rht.name
               ORDER BY totalPoints DESC`;
 
-  connection.query(sql, (err, groups) => {
+  client.query(sql, (err, groupsResult) => {
     if (err) throw err;
+
+    const groups = groupsResult.rows;
 
     // Now, get detailed information for each group
     const groupPromises = groups.map(group => {
@@ -129,13 +135,13 @@ app.get('/groups', (req, res) => {
         const groupDetailsSQL = `SELECT names.name, group_points.points, group_points.notes 
                                  FROM group_points
                                  INNER JOIN names ON group_points.name_id = names.id
-                                 WHERE group_points.group_id = ?`;
+                                 WHERE group_points.group_id = $1`;
 
-        connection.query(groupDetailsSQL, [group.group_id], (err, groupPoints) => {
+        client.query(groupDetailsSQL, [group.group_id], (err, groupPointsResult) => {
           if (err) {
             reject(err);
           } else {
-            group.points = groupPoints;
+            group.points = groupPointsResult.rows;
             resolve(group);
           }
         });
@@ -151,7 +157,6 @@ app.get('/groups', (req, res) => {
       });
   });
 });
-
 
 // Start the server
 app.listen(port, () => {
