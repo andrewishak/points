@@ -23,9 +23,10 @@ const client = new Client({
 client.connect();
 
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
-app.use(express.static(__dirname + "public"));
+app.use(express.static(__dirname + "/public"));
 
 // Render pages using EJS
 app.set('view engine', 'ejs');
@@ -124,7 +125,7 @@ app.get('/groups', (req, res) => {
                INNER JOIN names ON group_points.name_id = names.id
                INNER JOIN rht ON group_points.group_id = rht.id
               GROUP BY rht.id, rht.name
-              ORDER BY totalPoints DESC`;
+              ORDER BY rht.id `;
 
   client.query(sql, (err, groupsResult) => {
     if (err) throw err;
